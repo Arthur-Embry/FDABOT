@@ -1,0 +1,103 @@
+Feature: User Authentication System
+  As a user of Culinary Canvas
+  I want to manage my account authentication
+  So that I can securely access the platform's features
+
+  Background:
+    Given the PocketBase server is running at "https://auth.forkedit.com/"
+    And I am on the authentication page
+    And the page displays "Culinary Canvas" as the brand name in:
+      | Location     |
+      | Header       |
+      | Form title   |
+      | Footer       |
+
+  Scenario: View Management
+    When I first load the page
+    Then I should see the sign-in form by default
+    And the "Sign In" toggle should be highlighted in indigo
+    And the "Sign Up" toggle should be gray
+
+    When I click the "Sign Up" toggle
+    Then the sign-up form should be visible
+    And the sign-in form should be hidden
+    And the forgot password form should be hidden
+    And the form title should update to "Sign Up for Culinary Canvas"
+
+    When I click the "Sign In" toggle
+    Then the sign-in form should be visible
+    And the sign-up form should be hidden
+    And the forgot password form should be hidden
+    And the form title should update to "Sign In to Culinary Canvas"
+
+  Scenario: Google Authentication
+    Given I am on any authentication form
+    When I click "Continue with Google"
+    Then the button should show a loading state
+    And the system should initiate OAuth2 authentication with Google
+    And upon success:
+      | Action                              |
+      | Set secure authentication cookie    |
+      | Redirect to home page              |
+
+  Scenario: User Sign In
+    Given I am on the sign-in form
+    When I enter valid credentials:
+      | Field    | Value            |
+      | Email    | valid@email.com  |
+      | Password | validPassword123 |
+    And I submit the form
+    Then the system should authenticate the user
+    And set a secure authentication cookie
+    And redirect to the home page
+
+    When I enter unverified email credentials
+    Then I should see a message to verify my email
+    And a new verification link should be sent
+    And I should not be logged in
+
+  Scenario: User Sign Up
+    Given I am on the sign-up form
+    When I enter new account details:
+      | Field             | Value            |
+      | Email            | new@email.com    |
+      | Password         | newPassword123   |
+      | Confirm Password | newPassword123   |
+    And I accept the terms and conditions
+    And I submit the form
+    Then a new user account should be created
+    And a verification email should be sent
+    And I should see a success message
+
+    When passwords don't match
+    Then I should see "Passwords do not match"
+    And the form submission should be prevented
+
+    When terms are not accepted
+    Then I should see "Please accept the terms and conditions"
+    And the form submission should be prevented
+
+  Scenario: Password Reset
+    Given I am on the sign-in form
+    When I click "Forgot Password?"
+    Then the forgot password form should be visible
+    And the form title should update to "Reset your Culinary Canvas Password"
+
+    When I enter my email for password reset
+    And submit the form
+    Then a password reset link should be sent
+    And I should see a confirmation message
+
+  Scenario: Form Error Handling
+    Given I am on any authentication form
+    When an error occurs during form submission
+    Then the submit button should return to its normal state
+    And an appropriate error message should be displayed
+    And the form should be ready for retry
+
+  Scenario: Navigation
+    Given I am on any form view
+    When I navigate between forms
+    Then previous error messages should be cleared
+    And form fields should be reset
+    And the appropriate form title should be displayed

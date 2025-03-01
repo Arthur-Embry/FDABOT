@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ACME Signup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <style>
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        html::-webkit-scrollbar,body::-webkit-scrollbar {
+        display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        html,body {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 font-sans flex flex-col min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-indigo-600 p-4">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <h1 id="brand-top" class="text-white text-xl font-semibold">ACME</h1>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-md mx-auto p-6 mt-12">
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="w-[600px]"></div>
+            <!-- Form Title -->
+            <div class="mb-6">
+                <h2 id="form-title" class="text-2xl font-semibold text-center text-gray-800">Sign In to ACME</h2>
+            </div>
+
+            <!-- Form Toggle Links -->
+            <div class="flex justify-center space-x-4 mb-6">
+                <button id="toggle-signin" class="text-indigo-600 font-medium">Sign In</button>
+                <button id="toggle-signup" class="text-gray-400 font-medium">Sign Up</button>
+            </div>
+
+            <!-- Social Auth -->
+            <div class="mb-4">
+                <button id="google-auth"
+                    class="w-full flex items-center justify-center border border-gray-300 rounded-lg p-2 text-gray-700 hover:bg-gray-100">
+                    <i class="fab fa-google mr-2"></i>Continue with Google
+                </button>
+            </div>
+
+            <!-- Divider -->
+            <div class="flex items-center mb-4">
+                <hr class="flex-grow border-gray-300" />
+                <span class="mx-2 text-gray-500 text-sm">or</span>
+                <hr class="flex-grow border-gray-300" />
+            </div>
+
+            <!-- Sign In Form -->
+            <form id="signin-form" class="space-y-4">
+                <div>
+                    <input type="email" id="signin-email" placeholder="Email"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                        required>
+                </div>
+                <div>
+                    <input type="password" id="signin-password" placeholder="Password"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                        required>
+                </div>
+                <div>
+                    <button type="submit"
+                        class="w-full bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 transition-colors">Sign
+                        In</button>
+                </div>
+                <div class="text-center">
+                    <a href="#" id="forgot-password-link" class="text-sm text-indigo-600 hover:underline">Forgot
+                        Password?</a>
+                </div>
+                <div id="signin-message" class="text-sm text-center text-red-600"></div>
+            </form>
+
+            <!-- Sign Up Form -->
+            <form id="signup-form" class="space-y-4 hidden">
+                <div>
+                    <input type="email" id="signup-email" placeholder="Email"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                        required>
+                </div>
+                <div>
+                    <input type="password" id="signup-password" placeholder="Password"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                        required>
+                </div>
+                <div>
+                    <input type="password" id="signup-password-confirm" placeholder="Confirm Password"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                        required>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="terms-checkbox" class="mr-2">
+                    <label for="terms-checkbox" class="text-sm text-gray-600">
+                        I agree to the <a href="#" class="text-indigo-600 hover:underline">Terms</a> and <a href="#"
+                            class="text-indigo-600 hover:underline">Privacy Policy</a>
+                    </label>
+                </div>
+                <div>
+                    <button type="submit"
+                        class="w-full bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 transition-colors">Create
+                        Account</button>
+                </div>
+                <div id="signup-message" class="text-sm text-center text-red-600"></div>
+            </form>
+
+            <!-- Forgot Password Form -->
+            <form id="forgot-form" class="space-y-4 hidden">
+                <div>
+                    <input type="email" id="forgot-email" placeholder="Enter your email"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                        required>
+                </div>
+                <div>
+                    <button type="submit"
+                        class="w-full bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 transition-colors">Send
+                        Reset Link</button>
+                </div>
+                <div id="forgot-message" class="text-sm text-center text-red-600"></div>
+                <div class="text-center">
+                    <a href="#" id="back-to-signin" class="text-sm text-indigo-600 hover:underline">Back to Sign In</a>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- Footer (Sticky) -->
+    <footer class="bg-white border-t border-gray-200 p-4 mt-auto">
+        <div class="max-w-6xl mx-auto text-center text-gray-600">
+            <p>&copy; 2025 <span id="footer-brand">ACME</span>. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- PocketBase and App Script -->
+    <script src="https://unpkg.com/pocketbase@0.21.3/dist/pocketbase.umd.js"></script>
+    <script>
+        // Define brand variable
+        const brandName = "FDA BOT";
+
+        // Set brand name in header, form title, and footer on DOM load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('brand-top').textContent = brandName;
+            document.getElementById('form-title').textContent = 'Sign In to ' + brandName;
+            document.getElementById('footer-brand').textContent = brandName;
+        });
+
+        // Define PocketBase URL and initialize client
+        const POCKETBASE_URL = 'http://127.0.0.1:8090';
+        const pb = new PocketBase(POCKETBASE_URL);
+
+        // Form Elements
+        const toggleSignin = document.getElementById('toggle-signin');
+        const toggleSignup = document.getElementById('toggle-signup');
+        const signinForm = document.getElementById('signin-form');
+        const signupForm = document.getElementById('signup-form');
+        const forgotForm = document.getElementById('forgot-form');
+        const formTitle = document.getElementById('form-title');
+        const forgotLink = document.getElementById('forgot-password-link');
+        const backToSignin = document.getElementById('back-to-signin');
+
+        // Message Elements
+        const signinMessage = document.getElementById('signin-message');
+        const signupMessage = document.getElementById('signup-message');
+        const forgotMessage = document.getElementById('forgot-message');
+
+        // Toggle Form Views
+        toggleSignin.addEventListener('click', () => {
+            formTitle.textContent = 'Sign In to ' + brandName;
+            signinForm.classList.remove('hidden');
+            signupForm.classList.add('hidden');
+            forgotForm.classList.add('hidden');
+            toggleSignin.classList.replace('text-gray-400', 'text-indigo-600');
+            toggleSignup.classList.replace('text-indigo-600', 'text-gray-400');
+            clearMessages();
+        });
+
+        toggleSignup.addEventListener('click', () => {
+            formTitle.textContent = 'Sign Up for ' + brandName;
+            signupForm.classList.remove('hidden');
+            signinForm.classList.add('hidden');
+            forgotForm.classList.add('hidden');
+            toggleSignup.classList.replace('text-gray-400', 'text-indigo-600');
+            toggleSignin.classList.replace('text-indigo-600', 'text-gray-400');
+            clearMessages();
+        });
+
+        forgotLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            formTitle.textContent = 'Reset your ' + brandName + ' Password';
+            forgotForm.classList.remove('hidden');
+            signinForm.classList.add('hidden');
+            signupForm.classList.add('hidden');
+            clearMessages();
+        });
+
+        backToSignin.addEventListener('click', (e) => {
+            e.preventDefault();
+            formTitle.textContent = 'Sign In to ' + brandName;
+            signinForm.classList.remove('hidden');
+            signupForm.classList.add('hidden');
+            forgotForm.classList.add('hidden');
+            clearMessages();
+        });
+
+        function clearMessages() {
+            signinMessage.textContent = '';
+            signupMessage.textContent = '';
+            forgotMessage.textContent = '';
+        }
+
+        // Helper for button loading state
+        function setLoading(button, isLoading) {
+            if (isLoading) {
+                button.disabled = true;
+                button.textContent = 'Loading...';
+            } else {
+                button.disabled = false;
+                if (button.id === 'google-auth') {
+                    button.innerHTML = '<i class="fab fa-google mr-2"></i>Continue with Google';
+                } else if (button.closest('form').id === 'signin-form') {
+                    button.textContent = 'Sign In';
+                } else if (button.closest('form').id === 'signup-form') {
+                    button.textContent = 'Create Account';
+                } else if (button.closest('form').id === 'forgot-form') {
+                    button.textContent = 'Send Reset Link';
+                }
+            }
+        }
+
+        // Google SSO Authentication (only provider)
+        document.getElementById('google-auth').addEventListener('click', async (e) => {
+            e.preventDefault();
+            try {
+                setLoading(e.target, true);
+                const authData = await pb.collection('users').authWithOAuth2({ provider: 'google' });
+                document.cookie = `pb_auth=${pb.authStore.token}; path=/; max-age=604800; secure; samesite=Strict`;
+                window.location.href = '/landing';
+            } catch (err) {
+                console.error('Google auth failed:', err);
+                signinMessage.textContent = err.message;
+            } finally {
+                setLoading(e.target, false);
+            }
+        });
+
+        // Sign In Form Submission
+        signinForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearMessages();
+            const email = document.getElementById('signin-email').value;
+            const password = document.getElementById('signin-password').value;
+            const submitButton = signinForm.querySelector('button[type="submit"]');
+            try {
+                setLoading(submitButton, true);
+                const authData = await pb.collection('users').authWithPassword(email, password);
+                if (!authData.record.verified) {
+                    await pb.collection('users').requestVerification(email);
+                    signinMessage.textContent = 'Please verify your email. Verification link sent.';
+                    pb.authStore.clear();
+                    setLoading(submitButton, false);
+                    return;
+                }
+                document.cookie = `pb_auth=${pb.authStore.token}; path=/; max-age=604800; secure; samesite=Strict`;
+                signinMessage.textContent = 'Sign in successful! Redirecting...';
+                setTimeout(() => window.location.href = '/landing', 1000);
+            } catch (err) {
+                console.error('Sign in error:', err);
+                signinMessage.textContent = err.message;
+            } finally {
+                setLoading(submitButton, false);
+            }
+        });
+
+        // Sign Up Form Submission
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearMessages();
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const passwordConfirm = document.getElementById('signup-password-confirm').value;
+            const termsChecked = document.getElementById('terms-checkbox').checked;
+            const submitButton = signupForm.querySelector('button[type="submit"]');
+
+            if (password !== passwordConfirm) {
+                signupMessage.textContent = 'Passwords do not match.';
+                return;
+            }
+            if (!termsChecked) {
+                signupMessage.textContent = 'Please accept the terms and conditions.';
+                return;
+            }
+
+            try {
+                setLoading(submitButton, true);
+                const data = { email, password, passwordConfirm, emailVisibility: true };
+                await pb.collection('users').create(data);
+                await pb.collection('users').requestVerification(email);
+                signupMessage.textContent = 'Account created! Please verify your email.';
+            } catch (err) {
+                console.error('Sign up error:', err);
+                if (err.data && err.data.data && err.data.data.email && err.data.data.email.code === 'validation_invalid_not_unique') {
+                    signupMessage.textContent = 'This email address is already registered.';
+                } else {
+                    signupMessage.textContent = err.message;
+                }
+            } finally {
+                setLoading(submitButton, false);
+            }
+        });
+
+        // Forgot Password Form Submission
+        forgotForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearMessages();
+            const email = document.getElementById('forgot-email').value;
+            const submitButton = forgotForm.querySelector('button[type="submit"]');
+            try {
+                setLoading(submitButton, true);
+                await pb.collection('users').requestPasswordReset(email);
+                forgotMessage.textContent = 'Password reset link sent to your email.';
+            } catch (err) {
+                console.error('Forgot password error:', err);
+                forgotMessage.textContent = err.message;
+            } finally {
+                setLoading(submitButton, false);
+            }
+        });
+    </script>
+</body>
+
+</html>
