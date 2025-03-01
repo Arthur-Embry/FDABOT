@@ -480,6 +480,7 @@
         }
       });
     });
+
   </script>
 </head>
 <body class="font-outfit bg-gray-50 dark:bg-slate-900 text-gray-800 dark:text-gray-200 min-h-screen flex flex-col antialiased">
@@ -688,6 +689,15 @@
     if (toggleSuggestionsBtn) {
       chevronIcon = toggleSuggestionsBtn.querySelector('i');
     }
+
+    // Add Enter key submission for message input
+    messageInput.addEventListener('keydown', (e) => {
+      // Submit on Enter without Shift key (Shift+Enter allows for line breaks)
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        chatForm.dispatchEvent(new Event('submit'));
+      }
+    });
 
     // Color legend modal functionality
     showLegendBtn.addEventListener('click', () => {
