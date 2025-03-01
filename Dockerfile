@@ -53,7 +53,7 @@ RUN echo '#!/bin/bash' > /start.sh && \
     echo 'echo "Files in root directory:"' >> /start.sh && \
     echo 'ls -la /app/' >> /start.sh && \
     echo 'echo "Starting uvicorn..."' >> /start.sh && \
-    echo 'uvicorn app:app --host 0.0.0.0 --port 8000 --reload' >> /start.sh && \
+    echo 'uvicorn app:app --host 0.0.0.0 --port 8000' >> /start.sh && \
     chmod +x /start.sh
 
 # Expose ports for FastAPI and PocketBase

@@ -650,6 +650,8 @@
   </div>
 
   <script>
+    let isFirstMessage = true;
+
     // DOM elements
     const chatContainer = document.getElementById('chat-container');
     const chatForm = document.getElementById('chat-form');
@@ -1216,12 +1218,12 @@
           const formattedDate = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
           
           chatItem.innerHTML = `
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-2">
-                <i class="fa-regular fa-comments text-gray-400 dark:text-gray-500"></i>
-                <span class="text-sm truncate">${chat.title}</span>
+            <div class="flex items-center justify-between w-full">
+              <div class="flex items-center space-x-2 w-3/5 overflow-hidden">
+                <i class="fa-regular fa-comments text-gray-400 dark:text-gray-500 flex-shrink-0"></i>
+                <span class="text-sm truncate max-w-full">${chat.title}</span>
               </div>
-              <div class="flex items-center space-x-1">
+              <div class="flex items-center space-x-2 flex-shrink-0">
                 <span class="text-xs text-gray-400 dark:text-gray-500">${formattedDate}</span>
                 <button class="delete-chat-btn p-1 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400">
                   <i class="fa-solid fa-trash-can text-xs"></i>
@@ -1283,7 +1285,14 @@
       
       // Event listeners
       newChatButton.addEventListener('click', createNewChat);
-      
+      // Make suggestion buttons functional
+      suggestionButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          messageInput.value = button.textContent.trim();
+          chatForm.dispatchEvent(new Event('submit'));
+        });
+      });
+
       // Initialize the chat system
       initChatSystem();
     });
