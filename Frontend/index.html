@@ -119,6 +119,12 @@
       }
     }
 
+    // Define global variables to fix scope issues
+    let suggestionsContent;
+    let chevronIcon;
+    let exporterSelect;
+    let chatContainer;
+
     // Utility functions
     async function fetchCsvList() {
       try {
@@ -187,13 +193,14 @@
 
       // Get DOM elements
       const toggleBtn = document.getElementById('toggle-suggestions');
-      const suggestionsContent = document.getElementById('suggestions-content');
-      const chevronIcon = toggleBtn.querySelector('i');
-      const exporterSelect = document.getElementById('exporter-select');
+      suggestionsContent = document.getElementById('suggestions-content');
+      chevronIcon = toggleBtn.querySelector('i');
+      exporterSelect = document.getElementById('exporter-select');
       const complianceCheckButton = document.getElementById('compliance-check-button');
       const messageInput = document.getElementById('message-input');
       const chatForm = document.getElementById('chat-form');
       const loadingIndicator = document.getElementById('loading-indicator');
+      chatContainer = document.getElementById('chat-container');
       let isFirstMessage = true;
 
       // Initialize data
@@ -256,8 +263,12 @@
 
         if (isFirstMessage) {
           isFirstMessage = false;
-          suggestionsContent.classList.add('hidden');
-          chevronIcon.style.transform = 'rotate(180deg)';
+          if (suggestionsContent) {
+            suggestionsContent.classList.add('hidden');
+          }
+          if (chevronIcon) {
+            chevronIcon.style.transform = 'rotate(180deg)';
+          }
         }
 
         addMessageToChat('user', message);
@@ -271,7 +282,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
               message: message,
-              exporter_id: exporterSelect.value
+              exporter_id: exporterSelect ? exporterSelect.value : ''
             })
           });
 
@@ -667,6 +678,16 @@
     const showLegendBtn = document.getElementById('show-legend-btn');
     const closeLegendBtn = document.getElementById('close-legend-btn');
     const colorLegendModal = document.getElementById('color-legend-modal');
+    
+    // Initialize global variables to fix scope issues
+    suggestionsContent = document.getElementById('suggestions-content');
+    exporterSelect = document.getElementById('exporter-select');
+    
+    // Get chevron icon for suggestions toggle
+    const toggleSuggestionsBtn = document.getElementById('toggle-suggestions');
+    if (toggleSuggestionsBtn) {
+      chevronIcon = toggleSuggestionsBtn.querySelector('i');
+    }
 
     // Color legend modal functionality
     showLegendBtn.addEventListener('click', () => {
@@ -787,8 +808,12 @@
 
       if (isFirstMessage) {
         isFirstMessage = false;
-        suggestionsContent.classList.add('hidden');
-        chevronIcon.style.transform = 'rotate(180deg)';
+        if (suggestionsContent) {
+          suggestionsContent.classList.add('hidden');
+        }
+        if (chevronIcon) {
+          chevronIcon.style.transform = 'rotate(180deg)';
+        }
       }
 
       addMessageToChat('user', message);
@@ -802,7 +827,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             message: message,
-            exporter_id: exporterSelect.value
+            exporter_id: exporterSelect ? exporterSelect.value : ''
           })
         });
 
@@ -1291,6 +1316,7 @@
           messageInput.value = button.textContent.trim();
           chatForm.dispatchEvent(new Event('submit'));
         });
+      });
       });
 
       // Initialize the chat system
