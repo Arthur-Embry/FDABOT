@@ -663,8 +663,8 @@
   <script>
     let isFirstMessage = true;
 
-    // DOM elements
-    const chatContainer = document.getElementById('chat-container');
+    // DOM elements - using the global variables we defined earlier
+    chatContainer = document.getElementById('chat-container');
     const chatForm = document.getElementById('chat-form');
     const messageInput = document.getElementById('message-input');
     const loadingIndicator = document.getElementById('loading-indicator');
@@ -1316,7 +1316,6 @@
           messageInput.value = button.textContent.trim();
           chatForm.dispatchEvent(new Event('submit'));
         });
-      });
       });
 
       // Initialize the chat system
