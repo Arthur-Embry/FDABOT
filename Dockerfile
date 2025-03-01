@@ -49,7 +49,7 @@ RUN echo '#!/bin/bash' > /start.sh && \
     echo 'sleep 5' >> /start.sh && \
     echo '' >> /start.sh && \
     echo 'echo "Starting FastAPI application..."' >> /start.sh && \
-    echo 'export POCKETBASE_URL="http://127.0.0.1:8090"' >> /start.sh && \
+    echo 'export POCKETBASE_URL="https://pb-fda-channel.operatorai.com"' >> /start.sh && \
     echo 'echo "Files in root directory:"' >> /start.sh && \
     echo 'ls -la /app/' >> /start.sh && \
     echo 'echo "Starting uvicorn..."' >> /start.sh && \
