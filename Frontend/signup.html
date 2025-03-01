@@ -222,11 +222,7 @@
         });
 
         // Define PocketBase URL and initialize client
-        const POCKETBASE_URL = window.location.hostname === 'localhost' || 
-                            window.location.hostname === '127.0.0.1' || 
-                            window.location.hostname === '0.0.0.0'
-                            ? 'http://127.0.0.1:8090'
-                            : 'https://pb-fda-channel.operatorai.com';
+        const POCKETBASE_URL = 'https://pb-fda-channel.operatorai.com';
 
         const pb = new PocketBase(POCKETBASE_URL);
 
