@@ -4,17 +4,179 @@ import json
 import time  # For synchronous sleep
 import asyncio
 import threading
+import requests
+import logging
 import anthropic
 from anthropic.types import ContentBlock, ToolUseBlock, TextBlock
+from dotenv import load_dotenv
+from fastapi import HTTPException
+from fastapi.responses import JSONResponse
+from pocketbase import PocketBase
+from groq import Groq
 
-# CSV file paths
-DOCUMENTS_CSV = "documents.csv"
-SHIPMENTS_CSV = "shipments.csv"
-TRACEABILITY_CSV = "traceability_records.csv"
+# Configure logging
+logging.basicConfig(
+    level=getattr(logging, os.getenv('LOG_LEVEL', 'INFO')),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-# Set the API key and model (for actual Anthropic API calls)
-ANTHROPIC_API_KEY = "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"
-MODEL = "claude-3-5-sonnet-20241022"
+# Load environment variables
+load_dotenv()
+
+# CSV file paths - load from env or use defaults
+CSV_DIR = os.getenv("CSV_DIR", "CSV")
+DOCUMENTS_CSV = os.path.join(CSV_DIR, os.getenv("DOCUMENTS_CSV", "documents.csv"))
+SHIPMENTS_CSV = os.path.join(CSV_DIR, os.getenv("SHIPMENTS_CSV", "shipments.csv"))
+TRACEABILITY_CSV = os.path.join(CSV_DIR, os.getenv("TRACEABILITY_CSV", "traceability_records.csv"))
+
+# Set the API key and model from environment variables
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+MODEL = os.getenv("CLAUDE_MODEL", "claude-3-5-sonnet-20241022")
+
+# PocketBase and Groq utility functions
+def init_pocketbase():
+    """Initialize PocketBase connection with admin authentication"""
+    pb_url = os.getenv('POCKETBASE_URL')
+    admin_email = os.getenv('POCKETBASE_ADMIN_EMAIL')
+    admin_password = os.getenv('POCKETBASE_ADMIN_PASSWORD')
+    
+    pb = PocketBase(pb_url)
+    try:
+        pb.admins.auth_with_password(admin_email, admin_password)
+        logger.info("Successfully authenticated with PocketBase using SDK")
+    except Exception as e:
+        logger.error(f"Failed to authenticate with PocketBase using SDK: {str(e)}")
+    return pb
+
+def setup_oauth_via_http():
+    """Set up OAuth providers for the users collection using raw HTTP requests"""
+    pb_url = os.getenv('POCKETBASE_URL')
+    admin_email = os.getenv('POCKETBASE_ADMIN_EMAIL')
+    admin_password = os.getenv('POCKETBASE_ADMIN_PASSWORD')
+    client_id = os.getenv('GOOGLE_CLIENT_ID')
+    client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
+    
+    try:
+        # Authenticate as admin
+        auth_response = requests.post(
+            f"{pb_url}/api/collections/_superusers/auth-with-password",
+            headers={"Content-Type": "application/json", "Accept": "*/*"},
+            json={"identity": admin_email, "password": admin_password}
+        )
+        
+        if not auth_response.ok:
+            logger.error(f"Admin auth failed: {auth_response.status_code}")
+            return False
+        
+        token = auth_response.json().get('token', '')
+        if not token:
+            return False
+        
+        # Set up headers for subsequent requests
+        headers = {
+            "Authorization": token,
+            "Content-Type": "application/json",
+            "Accept": "*/*"
+        }
+        
+        # Find users collection
+        collections_response = requests.get(f"{pb_url}/api/collections", headers=headers)
+        if not collections_response.ok:
+            return False
+        
+        # Find users auth collection
+        auth_collection = None
+        for collection in collections_response.json().get('items', []):
+            if collection.get('type') == 'auth' and collection.get('name') == 'users':
+                auth_collection = collection
+                break
+        
+        if not auth_collection:
+            return False
+        
+        collection_id = auth_collection.get('id')
+        
+        # Get collection details
+        collection_response = requests.get(
+            f"{pb_url}/api/collections/{collection_id}",
+            headers=headers
+        )
+        
+        if not collection_response.ok:
+            return False
+        
+        collection_data = collection_response.json()
+        
+        # Check if already configured
+        oauth2_config = collection_data.get('oauth2', {})
+        if oauth2_config.get('enabled') and oauth2_config.get('providers'):
+            for provider in oauth2_config.get('providers', []):
+                if provider.get('name') == 'google' and provider.get('clientId'):
+                    return True
+        
+        # Update OAuth configuration
+        collection_data['oauth2'] = {
+            "enabled": True,
+            "providers": [{"name": "google", "clientId": client_id, "clientSecret": client_secret}],
+            "mappedFields": {"id": "", "name": "name", "username": "", "avatarURL": "avatar"}
+        }
+        
+        # Update collection
+        update_response = requests.patch(
+            f"{pb_url}/api/collections/{collection_id}",
+            headers=headers,
+            json=collection_data
+        )
+        
+        return update_response.ok
+        
+    except Exception as e:
+        logger.error(f"Error setting up OAuth: {str(e)}")
+        return False
+
+def fetch_pocketbase_config():
+    """Return the current PocketBase configuration."""
+    try:
+        config = {
+            "url": os.getenv('POCKETBASE_URL'),
+            "status": "active"
+        }
+        
+        # Optionally check if the server is reachable
+        try:
+            response = requests.get(f"{config['url']}/api/health", timeout=3)
+            if response.ok:
+                config["health"] = "ok"
+            else:
+                config["health"] = "error"
+                config["status_code"] = response.status_code
+        except Exception as e:
+            config["health"] = "unreachable"
+            config["error"] = str(e)
+            
+        return config
+    except Exception as e:
+        logger.error(f"Error fetching PocketBase config: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve configuration: {str(e)}")
+
+def init_groq_client():
+    """Initialize and return a Groq client"""
+    api_key = os.getenv('GROQ_API_KEY')
+    if not api_key:
+        logger.error("GROQ_API_KEY environment variable not set")
+        return None
+    
+    try:
+        client = Groq(api_key=api_key)
+        return client
+    except Exception as e:
+        logger.error(f"Failed to initialize Groq client: {str(e)}")
+        return None
+
+def get_groq_model():
+    """Get the configured Groq model from environment variables"""
+    return os.getenv('GROQ_MODEL', 'llama3-8b-8192')
 
 class FDAComplianceBot:
     def __init__(self):
@@ -33,6 +195,9 @@ class FDAComplianceBot:
         }
 
         print("Loading reference data...")
+        
+        # Create CSV directory if it doesn't exist
+        os.makedirs(CSV_DIR, exist_ok=True)
         
         # Load CSVs with proper column parsing
         self.documents_df = self._load_csv_with_validation(

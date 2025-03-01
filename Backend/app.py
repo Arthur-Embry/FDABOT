@@ -1,29 +1,83 @@
 import os
 import asyncio
 import pandas as pd
-from fastapi import FastAPI, Request, UploadFile, File
+import logging
+from fastapi import FastAPI, Request, UploadFile, File, HTTPException
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from utils import bot, update_csv_files, DOCUMENTS_CSV, SHIPMENTS_CSV, TRACEABILITY_CSV
+from utils import (
+    bot, update_csv_files, DOCUMENTS_CSV, SHIPMENTS_CSV, TRACEABILITY_CSV,
+    init_pocketbase, setup_oauth_via_http, fetch_pocketbase_config, init_groq_client, get_groq_model
+)
+from dotenv import load_dotenv
+
+# Configure logging
+logging.basicConfig(
+    level=getattr(logging, os.getenv('LOG_LEVEL', 'INFO')),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Load environment variables
+load_dotenv()
 
 app = FastAPI()
 
-# Allow CORS (adjust as needed)
+# Get CORS settings from environment variables
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*").split(",")
+
+# Allow CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Get frontend paths from environment variables
+FRONTEND_DIR = os.getenv("FRONTEND_DIR", "Frontend")
+LANDING_DIR = os.getenv("LANDING_DIR", "Landing")
+
+# Initialize clients on startup
+pb_client = None
+groq_client = None
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize clients on startup"""
+    global pb_client, groq_client
+    
+    # Initialize PocketBase client
+    try:
+        pb_client = init_pocketbase()
+        if pb_client:
+            logger.info("PocketBase client initialized successfully")
+            
+            # Set up OAuth
+            oauth_result = setup_oauth_via_http()
+            if oauth_result:
+                logger.info("OAuth configured successfully")
+            else:
+                logger.warning("OAuth configuration failed or was already configured")
+    except Exception as e:
+        logger.error(f"Error initializing PocketBase: {str(e)}")
+    
+    # Initialize Groq client
+    try:
+        groq_client = init_groq_client()
+        if groq_client:
+            logger.info("Groq client initialized successfully")
+    except Exception as e:
+        logger.error(f"Error initializing Groq client: {str(e)}")
+
 @app.get("/", response_class=HTMLResponse)
 async def get_index():
-    return FileResponse("signup.html")
+    return FileResponse(f"{FRONTEND_DIR}/signup.html")
 
 @app.get("/landing", response_class=HTMLResponse)
 async def get_index():
-    return FileResponse("index.html")
+    return FileResponse(f"{FRONTEND_DIR}/index.html")
 
 @app.post("/upload_csv")
 async def upload_csv(
@@ -108,7 +162,7 @@ async def list_exporters():
                     name = str(row[exporter_name_col]).strip('"')
                     exporter_names[eid] = name
     except Exception as e:
-        print(f"Error reading documents CSV: {str(e)}")
+        logger.error(f"Error reading documents CSV: {str(e)}")
     
     # Add CSV-only exporters (those without profiles)
     profile_ids = {exp["exporter_id"] for exp in profile_exporters}
@@ -146,6 +200,77 @@ async def list_exporters():
         "csv_only_count": len(csv_only_exporters)
     })
 
+# New endpoints for PocketBase and Groq integration
+@app.get("/api/pocketbase/status")
+async def get_pocketbase_status():
+    """Get the current status of the PocketBase connection"""
+    try:
+        config = fetch_pocketbase_config()
+        return JSONResponse(config)
+    except Exception as e:
+        logger.error(f"Error getting PocketBase status: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/pocketbase/setup-oauth")
+async def setup_pocketbase_oauth():
+    """Set up OAuth for PocketBase"""
+    try:
+        result = setup_oauth_via_http()
+        if result:
+            return JSONResponse({"status": "success", "message": "OAuth configured successfully"})
+        else:
+            return JSONResponse(
+                {"status": "error", "message": "Failed to configure OAuth"}, 
+                status_code=500
+            )
+    except Exception as e:
+        logger.error(f"Error setting up OAuth: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/groq/status")
+async def get_groq_status():
+    """Check if Groq API is configured and working"""
+    global groq_client
+    
+    if not groq_client:
+        try:
+            groq_client = init_groq_client()
+        except Exception as e:
+            logger.error(f"Error initializing Groq client: {str(e)}")
+            return JSONResponse(
+                {"status": "error", "message": f"Failed to initialize Groq client: {str(e)}"},
+                status_code=500
+            )
+    
+    if not groq_client:
+        return JSONResponse(
+            {"status": "error", "message": "Groq client not initialized. Check API key."},
+            status_code=500
+        )
+    
+    try:
+        # Test the Groq API with a simple completion
+        model = get_groq_model()
+        response = groq_client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": "Hello, are you working?"}],
+            max_tokens=10
+        )
+        return JSONResponse({
+            "status": "success", 
+            "message": "Groq API is working",
+            "model": response.model
+        })
+    except Exception as e:
+        logger.error(f"Error testing Groq API: {str(e)}")
+        return JSONResponse(
+            {"status": "error", "message": f"Failed to test Groq API: {str(e)}"},
+            status_code=500
+        )
+
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Get host and port from environment variables
+    HOST = os.getenv("HOST", "0.0.0.0")
+    PORT = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host=HOST, port=PORT)

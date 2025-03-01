@@ -230,15 +230,6 @@
 
       toggleBtn.addEventListener('click', toggleSuggestions);
 
-      // Quick suggestion buttons
-      document.querySelectorAll('.suggestion-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          messageInput.value = btn.textContent.trim();
-          messageInput.dispatchEvent(new Event('input'));
-          chatForm.dispatchEvent(new Event('submit'));
-        });
-      });
-
       // Mobile sidebar functionality
       const mobileMenuButton = document.getElementById('mobile-menu-button');
       mobileMenuButton.addEventListener('click', toggleMobileSidebar);
@@ -1005,15 +996,6 @@
       } finally {
         loadingIndicator.classList.add('hidden');
       }
-    });
-
-    // Quick suggestion buttons
-    document.querySelectorAll('.suggestion-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        messageInput.value = btn.textContent.trim();
-        messageInput.dispatchEvent(new Event('input'));
-        chatForm.dispatchEvent(new Event('submit'));
-      });
     });
 
     // Mobile sidebar toggle
