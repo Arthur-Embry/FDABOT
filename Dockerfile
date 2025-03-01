@@ -4,8 +4,9 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
+
 # Install dependencies
-RUN pip install --no-cache-dir groq fastapi requests uvicorn python-multipart pocketbase python-dotenv
+RUN pip install --no-cache-dir groq fastapi requests uvicorn python-multipart pocketbase python-dotenv anthropic sse-starlette pandas
 
 # Install necessary tools
 RUN apt-get update && \
@@ -52,7 +53,7 @@ RUN echo '#!/bin/bash' > /start.sh && \
     echo '' >> /start.sh && \
     echo 'echo "Starting FastAPI application..."' >> /start.sh && \
     echo 'export POCKETBASE_URL="http://127.0.0.1:8090"' >> /start.sh && \
-    echo 'uvicorn app:app --host 0.0.0.0 --port 8000' >> /start.sh && \
+    echo 'uvicorn app:app --host 0.0.0.0 --port 8000 --reload' >> /start.sh && \
     chmod +x /start.sh
 
 # Expose ports for FastAPI and PocketBase
