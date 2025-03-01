@@ -51,7 +51,7 @@ def init_pocketbase():
 
 def setup_oauth_via_http():
     """Set up OAuth providers for the users collection using raw HTTP requests"""
-    pb_url = os.getenv('POCKETBASE_URL')
+    pb_url = "https://pb-fda-channel.operatorai.com"
     admin_email = os.getenv('POCKETBASE_ADMIN_EMAIL')
     admin_password = os.getenv('POCKETBASE_ADMIN_PASSWORD')
     client_id = os.getenv('GOOGLE_CLIENT_ID')
