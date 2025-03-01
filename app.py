@@ -19,6 +19,10 @@ app.add_middleware(
 
 @app.get("/", response_class=HTMLResponse)
 async def get_index():
+    return FileResponse("signup.html")
+
+@app.get("/landing", response_class=HTMLResponse)
+async def get_index():
     return FileResponse("index.html")
 
 @app.post("/upload_csv")
